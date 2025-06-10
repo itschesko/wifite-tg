@@ -267,7 +267,7 @@ def export_results(chat_id):
             lines.append(f"\n\n{ssid}:\n\n<no hash>")
     payload = "\n".join(lines)
     if len(payload) < 3500:
-        bot.send_message(chat_id, f"python\n{payload}\n", parse_mode='Markdown')
+        bot.send_message(chat_id, f"```python\n{payload}\n```", parse_mode='Markdown')
     else:
         bio = io.BytesIO(payload.encode()); bio.name = "results.txt"
         bot.send_document(chat_id, bio, caption="Exported Results")
